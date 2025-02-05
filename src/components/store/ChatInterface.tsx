@@ -62,7 +62,7 @@ const ChatInterface = () => {
   return (
     <div className="col-span-8 lg:col-span-5">
       <div className="bg-zinc-200 py-6 relative lg:rounded-2xl lg:h-[80dvh] h-[94dvh] ">
-        <div className="lg:h-[calc(80dvh-160px)] h-[calc(80dvh-10px)] overflow-y-auto space-y-4 px-4 overflow-x-hidden">
+        <div className="lg:h-[calc(80dvh-135px)] h-[calc(80dvh-10px)] overflow-y-auto space-y-4 px-4 overflow-x-hidden">
           {messages.map((m) => (
             <div 
               key={m.id} 
