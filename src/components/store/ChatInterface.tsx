@@ -90,7 +90,7 @@ const ChatInterface = () => {
 
         <form 
           onSubmit={handleFormSubmit} 
-          className={`flex items-end absolute bottom-7 left-[5%] bg-white w-[90%] px-4 py-1.5 min-h-[52px] transition-all duration-300 ${
+          className={`flex items-end absolute lg:bottom-7 bottom-3 left-[5%] bg-white w-[90%] px-4 py-1.5 min-h-[52px] transition-all duration-300 ${
             isExpanded ? "rounded-2xl" : "rounded-full"
           }`}
         >
