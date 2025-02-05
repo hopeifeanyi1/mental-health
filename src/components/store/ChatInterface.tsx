@@ -1,54 +1,77 @@
-'use client'
-import React, { useRef, useState } from "react";
+'use client';
+import React, { useState, useRef, useEffect } from "react";
 import { SendIcon } from "./Icon";
 import { useChat } from 'ai/react';
 
 const ChatInterface = () => {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const [isExpanded, setIsExpanded] = useState(false);
-  
-  // Use the chat hook
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    api: '/api/chat'
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const { 
+    messages, 
+    input, 
+    handleInputChange, 
+    handleSubmit, 
+    isLoading, 
+    error 
+  } = useChat({
+    api: '/api/chat',
+    onError: (err) => {
+      console.error('Chat Error:', err);
+    }
   });
 
+  // Auto-scroll to bottom
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    handleInputChange(e); // AI SDK handler
+    handleInputChange(e);
     const textarea = e.target;
     textarea.style.height = "auto";
     const newHeight = Math.min(textarea.scrollHeight, 180);
     textarea.style.height = `${newHeight}px`;
     setIsExpanded(newHeight > 52);
-    
-    if (newHeight === 180) {
-      textarea.style.overflowY = "auto";
-    } else {
-      textarea.style.overflowY = "hidden";
-    }
+
+    textarea.style.overflowY = newHeight === 180 ? "auto" : "hidden";
   };
 
   return (
-    <div className="lg:col-span-5 col-span-8">
+    <div className="col-span-5">
       <div className="bg-zinc-200 p-6 relative rounded-2xl h-[80dvh]">
-        {/* Chat messages container */}
-        <div className="h-[calc(80dvh-160px)] overflow-y-auto mb-4">
+        {/* Messages Container */}
+        <div className="h-[calc(80dvh-160px)] overflow-y-auto space-y-4">
           {messages.map((m) => (
             <div 
               key={m.id} 
-              className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`}
+              className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div className={`max-w-[80%] rounded-lg px-4 py-2 ${
                 m.role === 'user' ? 'bg-blue-100' : 'bg-gray-100'
               }`}>
+                <div className="text-xs text-gray-500 mb-1">
+                  {m.role === 'user' ? 'You' : 'Mental Health Assistant'}
+                </div>
                 <div className="text-sm whitespace-pre-wrap">
                   {m.content}
                 </div>
               </div>
             </div>
           ))}
+          {error && (
+            <div className="text-red-500 p-2 rounded bg-red-50">
+              Error: {error.message}
+            </div>
+          )}
+          <div ref={messagesEndRef} />
         </div>
 
-        {/* Chat input (keep your existing styling) */}
         <form 
           onSubmit={handleSubmit}
           className={`flex items-end absolute bottom-7 left-[5%] bg-white w-[90%] px-4 py-1.5 min-h-[52px] transition-all duration-300 ${
@@ -72,10 +95,16 @@ const ChatInterface = () => {
 
           <button 
             type="submit" 
-            className="bg-black rounded-full w-10 h-10 flex items-center justify-center shrink-0"
+            className={`bg-black rounded-full w-10 h-10 flex items-center justify-center shrink-0 ${
+              isLoading ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
             disabled={isLoading}
           >
-            <SendIcon className="w-6 h-6 text-white" />
+            {isLoading ? (
+              <div className="animate-spin text-white">↻</div>
+            ) : (
+              <SendIcon className="w-6 h-6 text-white" />
+            )}
           </button>
         </form>
       </div>
