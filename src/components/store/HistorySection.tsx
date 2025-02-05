@@ -2,11 +2,9 @@ import React from 'react'
 import { Search } from "lucide-react";
 
 
-
-
 const HistorySection = () => {
   return (
-    <div className='col-span-3'>
+    <div className='col-span-3 lg:block hidden'>
       <div className=' bg-zinc-200 p-6 relative rounded-2xl h-[80dvh]'>
         <p className='font-semibold text-xl'>My Chats</p>
         <div className='flex flex-row absolute top-16 left-[5%] bg-white h-[45px] rounded-full w-[90%]'>
