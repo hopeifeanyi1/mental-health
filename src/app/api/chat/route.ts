@@ -7,7 +7,7 @@ export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
-    // Validate request format
+   
     if (!Array.isArray(messages)) {
       return new Response(JSON.stringify({ 
         error: "Invalid request format: messages must be an array"
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     }
 
     const result = await streamText({
-      model: groq('llama3-70b-8192'), // Updated model name
+      model: groq('llama3-70b-8192'), 
       system: `
         You are a compassionate mental health companion.
         Provide supportive, non-judgmental responses.

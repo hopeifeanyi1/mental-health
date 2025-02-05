@@ -22,7 +22,6 @@ const ChatInterface = () => {
     }
   });
 
-  // Auto-scroll to bottom
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -43,9 +42,8 @@ const ChatInterface = () => {
   };
 
   return (
-    <div className="col-span-5">
-      <div className="bg-zinc-200 p-6 relative rounded-2xl h-[80dvh]">
-        {/* Messages Container */}
+    <div className="col-span-8 lg:col-span-5">
+      <div className="bg-zinc-200 p-6 relative lg:rounded-2xl lg:h-[80dvh] h-[94dvh]">
         <div className="h-[calc(80dvh-160px)] overflow-y-auto space-y-4">
           {messages.map((m) => (
             <div 
