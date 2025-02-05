@@ -30,6 +30,13 @@ const ChatInterface = () => {
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    if (!input && textAreaRef.current) {
+      textAreaRef.current.style.height = '52px';
+      setIsExpanded(false);
+    }
+  }, [input]);
+
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     handleInputChange(e);
     const textarea = e.target;
@@ -37,14 +44,25 @@ const ChatInterface = () => {
     const newHeight = Math.min(textarea.scrollHeight, 180);
     textarea.style.height = `${newHeight}px`;
     setIsExpanded(newHeight > 52);
-
     textarea.style.overflowY = newHeight === 180 ? "auto" : "hidden";
+  };
+
+  
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!input.trim()) {
+      return; 
+    }
+    handleSubmit(e);
+    if (textAreaRef.current) {
+      textAreaRef.current.style.height = '52px';
+    }
   };
 
   return (
     <div className="col-span-8 lg:col-span-5">
-      <div className="bg-zinc-200 p-6 relative lg:rounded-2xl lg:h-[80dvh] h-[94dvh]">
-        <div className="h-[calc(80dvh-160px)] overflow-y-auto space-y-4">
+      <div className="bg-zinc-200 py-6 relative lg:rounded-2xl lg:h-[80dvh] h-[94dvh] ">
+        <div className="lg:h-[calc(80dvh-160px)] h-[calc(80dvh-10px)] overflow-y-auto space-y-4 px-4 overflow-x-hidden">
           {messages.map((m) => (
             <div 
               key={m.id} 
@@ -71,7 +89,7 @@ const ChatInterface = () => {
         </div>
 
         <form 
-          onSubmit={handleSubmit}
+          onSubmit={handleFormSubmit} 
           className={`flex items-end absolute bottom-7 left-[5%] bg-white w-[90%] px-4 py-1.5 min-h-[52px] transition-all duration-300 ${
             isExpanded ? "rounded-2xl" : "rounded-full"
           }`}
@@ -99,7 +117,7 @@ const ChatInterface = () => {
             disabled={isLoading}
           >
             {isLoading ? (
-              <div className="animate-spin text-white">↻</div>
+              <div className="animate-spin text-white text-xl">↻</div>
             ) : (
               <SendIcon className="w-6 h-6 text-white" />
             )}

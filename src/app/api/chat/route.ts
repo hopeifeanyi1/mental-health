@@ -7,7 +7,6 @@ export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
-   
     if (!Array.isArray(messages)) {
       return new Response(JSON.stringify({ 
         error: "Invalid request format: messages must be an array"
