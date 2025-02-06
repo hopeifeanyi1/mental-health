@@ -19,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <div className={`${inter.variable} antialiased relative`}>
-      <div className="lg:h-auto h-[6dvh] fixed lg:top-10 top-4 w-full lg:w-[42%] lg:left-[29%] z-50">
+      <div className="h-auto fixed lg:top-10 top-4 w-full lg:w-[42%] lg:left-[29%] z-50">
         <Nav />
       </div>
       <main>{children}</main>
