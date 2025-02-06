@@ -61,6 +61,7 @@ const ChatInterface = () => {
 
   return (
     <div className="col-span-8 lg:col-span-5">
+      <div className="lg:hidden block h-[6dvh]"></div>
       <div className="bg-zinc-200 py-6 relative lg:rounded-2xl lg:h-[80dvh] h-[94dvh] ">
         <div className="lg:h-[calc(80dvh-135px)] h-[calc(80dvh-10px)] overflow-y-auto space-y-4 px-4 overflow-x-hidden">
           {messages.map((m) => (
@@ -69,7 +70,7 @@ const ChatInterface = () => {
               className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                m.role === 'user' ? 'bg-blue-100' : 'bg-gray-100'
+                m.role === 'user' ? 'bg-blue-200' : 'bg-gray-100'
               }`}>
                 <div className="text-xs text-gray-500 mb-1">
                   {m.role === 'user' ? 'You' : 'Mental Health Assistant'}
@@ -129,3 +130,5 @@ const ChatInterface = () => {
 };
 
 export default ChatInterface;
+
+
