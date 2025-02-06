@@ -11,9 +11,9 @@ const Nav = () => {
   return (
     <div>
         <div className='lg:hidden block'>
-            <div className='lg:hidden flex justify-between bg-zinc-200 rounded-full py-2 mx-3'>
+            <div className='lg:hidden flex justify-between bg-zinc-200 rounded-full py-[7px] mx-[8px]'>
                 <Link href='./' className='my-auto pl-5'><Logo/></Link>
-                <Link href='./chat-area' className='text-white bg-black py-[4px] rounded-full text-sm mr-1.5 flex items-center px-3 font-semibold'>Try for Free</Link>
+                <Link href='./chat-area' className='text-white bg-black py-[9px] rounded-full text-md mr-[7px] flex items-center px-[15px] font-semibold'>Try for Free</Link>
             </div>
         </div>
         <div className='w-full lg:flex justify-between bg-zinc-200 rounded-full py-3 hidden'>
