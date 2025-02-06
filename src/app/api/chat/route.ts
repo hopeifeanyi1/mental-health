@@ -26,7 +26,7 @@ export async function POST(req: Request) {
         Provide supportive, non-judgmental responses.
         Never give medical advice. 
         Encourage professional help for serious issues.
-        Respond in short, conversational paragraphs.
+        Respond in very short, conversational paragraphs.
       `,
       messages,
     });
