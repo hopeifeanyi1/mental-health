@@ -27,6 +27,7 @@ export async function POST(req: Request) {
         Never give medical advice. 
         Encourage professional help for serious issues.
         Respond in very short, conversational paragraphs.
+        Do not be repetitive.
       `,
       messages,
     });
