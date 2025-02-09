@@ -5,14 +5,14 @@ import { useChat } from 'ai/react';
 import Link from "next/link";
 import Logo from "./Logo";
 import { LoaderCircle } from "lucide-react";
-import { Dot } from "./Icon";
+
 
 const ChatInterface = () => {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [showTyping, setShowTyping] = useState(false);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [minTimeElapsed, setMinTimeElapsed] = useState(true);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const { 
     messages, 
@@ -28,22 +28,24 @@ const ChatInterface = () => {
     }
   });
 
-  useEffect(() => {
-    if (isLoading) {
-      setShowTyping(true);
-      typingTimeoutRef.current = setTimeout(() => {
-        setShowTyping(false);
-      }, 1000);
-    } else {
-      setShowTyping(false);
-    }
+ useEffect(() => {
+  if (isLoading) {
+    setMinTimeElapsed(false);
+    timeoutRef.current = setTimeout(() => {
+      setMinTimeElapsed(true);
+    }, 3000);
+  } else {
+    setMinTimeElapsed(true);
+  }
 
-    return () => {
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
-    };
-  }, [isLoading]);
+  return () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+  };
+}, [isLoading]);
+
+  const showTyping = isLoading || !minTimeElapsed;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -52,6 +54,7 @@ const ChatInterface = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages, showTyping]);
+
 
   useEffect(() => {
     if (!input && textAreaRef.current) {
@@ -105,16 +108,11 @@ const ChatInterface = () => {
           ))}
           
           {showTyping && (
-            <div className="flex justify-start">
-              <div className="max-w-[80%] rounded-lg px-4 py-2 bg-gray-100">
-                <div className="text-xs text-gray-500 mb-1">Mental Health Assistant</div>
-                <div className="text-sm flex gap-1">
-                  <Dot className="w-4 h-4 animate-pulse delay-0" />
-                  <Dot className="w-4 h-4 animate-pulse delay-200" />
-                  <Dot className="w-4 h-4 animate-pulse delay-400" />
+                <div className="text-sm flex pl-4 ">
+                  <div className="bg-black/70 rounded-full w-[10px] h-[10px] mr-[8px] animate-pulse delay-0"/>
+                  <div className="bg-black/70 rounded-full w-[10px] h-[10px] mr-[8px] animate-pulse delay-200"/>
+                  <div className="bg-black/70 rounded-full w-[10px] h-[10px] animate-pulse delay-400"/>
                 </div>
-              </div>
-            </div>
           )}
 
           {error && (
