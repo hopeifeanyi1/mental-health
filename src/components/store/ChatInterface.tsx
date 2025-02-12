@@ -100,7 +100,7 @@ const ChatInterface = () => {
                 <div className="text-xs text-gray-500 mb-1">
                   {m.role === 'user' ? 'You' : 'Mental Health Assistant'}
                 </div>
-                <div className="text-sm whitespace-pre-wrap">
+                <div className="lg:text-lg text-md whitespace-pre-wrap">
                   {m.content}
                 </div>
               </div>
