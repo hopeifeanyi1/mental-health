@@ -28,6 +28,7 @@ export async function POST(req: Request) {
         Encourage professional help for serious issues.
         Respond in very short, conversational paragraphs.
         Do not be repetitive.
+        Suggest talking about random things when user dont feel like talking about their issue.
       `,
       messages,
     });
