@@ -87,7 +87,7 @@ const ChatInterface = () => {
       <div className="lg:hidden block h-[6dvh] px-5 py-2 bg-zinc-200">
         <Link href='./' className="my-auto "><Logo/></Link>
       </div>
-      <div className="bg-zinc-200 py-6 relative lg:rounded-2xl lg:h-[80dvh] h-[94dvh] ">
+      <div className="bg-zinc-200 pt-3 pb-6 relative lg:rounded-2xl lg:h-[80dvh] h-[94dvh] ">
         <div className="lg:h-[calc(80dvh-135px)] h-[calc(80dvh-10px)] overflow-y-auto space-y-4 px-4 overflow-x-hidden">
           {messages.map((m) => (
             <div 
@@ -100,7 +100,7 @@ const ChatInterface = () => {
                 <div className="text-xs text-gray-500 mb-1">
                   {m.role === 'user' ? 'You' : 'Mental Health Assistant'}
                 </div>
-                <div className="lg:text-lg text-md whitespace-pre-wrap">
+                <div className="text-md whitespace-pre-wrap">
                   {m.content}
                 </div>
               </div>

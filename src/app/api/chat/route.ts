@@ -14,7 +14,9 @@ export async function POST(req: Request) {
         status: 400,
         headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type',
         }
       });
     }
@@ -28,14 +30,43 @@ export async function POST(req: Request) {
         Encourage professional help for serious issues.
         Respond in very short, conversational paragraphs.
         Do not be repetitive.
-        Suggest talking about random things when user dont feel like talking about their issue.
+        Act like a therapist.
       `,
       messages,
     });
 
-    const response = result.toDataStreamResponse();
-    response.headers.set('Access-Control-Allow-Origin', '*');
-    return response;
+    // Convert the AI response to a readable stream
+    const aiStream = result.toDataStream();
+    
+    const slowStream = new ReadableStream({
+      async start(controller) {
+        const reader = aiStream.getReader();
+
+        async function readChunk() {
+          const { done, value } = await reader.read();
+          if (done) {
+            controller.close();
+            return;
+          }
+
+          controller.enqueue(value);
+          await new Promise(resolve => setTimeout(resolve, 50)); // 100ms delay per chunk
+          readChunk();
+        }
+
+        readChunk();
+      }
+    });
+
+    return new Response(slowStream, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Transfer-Encoding': 'chunked',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      }
+    });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
@@ -47,7 +78,9 @@ export async function POST(req: Request) {
       status: 500,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
       }
     });
   }
