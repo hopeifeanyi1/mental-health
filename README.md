@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+The Mental Health Chatbot, Easy Therapy, is a web-based application built with Next.js, Framer Motion, and AI-powered conversational capabilities. It provides a supportive, non-judgmental space for users seeking mental health guidance. The chatbot does not offer medical advice but encourages professional consultation for serious issues.
+Features
+AI-powered chatbot for mental health support
+Interactive and animated UI with Framer Motion
+Chat history for tracking conversations
+Responsive layout for mobile and desktop
+Uses AI SDK's GROQ LLaMA 3 model for generating empathetic responses
+Implements streaming responses for a smooth chat experience
+Technologies Used
+Next.js: Server-side rendering and API handling
+Typescript: Type Safety
+React: Component-based frontend
+Framer Motion: Smooth animations
+AI SDK & GROQ: Natural language processing
+Tailwind CSS: Modern and responsive UI styling
 
-## Getting Started
+Installation & Setup
+Clone the repository:
+ git clone https://github.com/your-repo/mental-health-chatbot.git
+cd mental-health-chatbot
 
-First, run the development server:
+Install dependencies:
+ npm install
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Run the development server:
+ npm run dev
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Key Components
+Home Page (page.tsx)
+Displays landing page with animations using Framer Motion
+Uses <Landing/> component for introductory content
+Chat Interface (ChatInterface.tsx)
+Handles user input and chatbot responses
+Uses useChat hook for API communication
+Implements typing indicators and smooth scrolling
+Chat API (/api/chat.ts)
+Accepts POST requests with user messages
+Uses groq AI model (llama3-70b-8192)
+Returns streamed chatbot responses with delay simulation
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+API Endpoint
+POST /api/chat
+Request Body:
+{
+  "messages": [
+    { "role": "user", "content": "I feel anxious." }
+  ]
+}
 
-## Learn More
+Response:
+{
+  "role": "assistant",
+  "content": "I'm here for you. Would you like to talk about what's on your mind?"
+}
 
-To learn more about Next.js, take a look at the following resources:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Deployment
+Vercel (Recommended):
+ npm run build
+vercel deploy
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Self-hosting:
+ npm run build
+npm start
 
-## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Contributors
+Ifeanyi Hope - Developer & Project Lead
