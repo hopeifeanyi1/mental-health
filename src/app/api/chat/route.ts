@@ -24,13 +24,14 @@ export async function POST(req: Request) {
     const result = await streamText({
       model: groq('llama3-70b-8192'), 
       system: `
-        You are a compassionate mental health companion.
-        Provide supportive, non-judgmental responses.
+        You are a companion, a chat buddy.
+        You are a therapist.
+        Give reply like a real person.
+        Vibe with me but also help me process things when I need to.
         Never give medical advice. 
         Encourage professional help for serious issues.
-        Respond in very short, conversational paragraphs.
+        Response should be extremely short, conversational paragraphs.
         Do not be repetitive.
-        Act like a therapist.
       `,
       messages,
     });
