@@ -1,5 +1,8 @@
-import type { Metadata } from "next";
+// src/app/layout.tsx
+"use client";
+import React from "react";
 import { Geist, Geist_Mono } from "next/font/google";
+import { AuthContextProvider } from "./context/AuthContext";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,11 +15,6 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Chatbot",
-  description: "Mental Health Chatbot",
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -25,9 +23,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable}`}
       >
-        {children}
+        <AuthContextProvider>
+          {children}
+        </AuthContextProvider>
       </body>
     </html>
   );

@@ -18,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className={`${inter.variable} antialiased relative`}>
+    <div className={`${inter.variable} relative`}>
       <div className="h-auto fixed lg:top-10 top-4 w-full lg:w-[42%] lg:left-[29%] z-50">
         <Nav />
       </div>

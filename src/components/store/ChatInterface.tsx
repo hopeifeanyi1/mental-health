@@ -116,8 +116,8 @@ const ChatInterface = () => {
           )}
 
           {error && (
-            <div className="text-red-500 p-2 rounded bg-red-50">
-              Error: {error.message}
+            <div className="text-red-500 p-2 rounded">
+              {error.message}
             </div>
           )}
           <div ref={messagesEndRef} />
