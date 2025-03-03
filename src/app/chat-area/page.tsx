@@ -7,9 +7,15 @@ import { LogOut } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { UserAuth } from '../context/AuthContext'
 import ProtectedRoute from '@/components/store/ProtectedRoute'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
+
 
 const page = () => {
-  const { logOut } = UserAuth();
+  const { user, logOut } = UserAuth();
+
+  if (!user) {
+    return null;
+  }
 
   const handleSignOut = async () => {
     try {
@@ -27,9 +33,38 @@ const page = () => {
           exit={{ opacity: 0 }} 
           transition={{ duration: 1.5 }}>
           <div className='absolute hidden lg:block pt-5 pl-16'><Logo/></div>
-          <div onClick={handleSignOut} className='absolute bottom-[100px] left-7 hidden lg:block p-2 rounded-full bg-neutral-200'>
-            <LogOut className='w-7 h-7 text-[#1b3d58]'/>
+          <div className='absolute lg:top-5 top-[5px] lg:right-16 right-3'>
+          <DropdownMenu>
+            <DropdownMenuTrigger className='outline-none'>
+              <div className=' h-10 w-10  rounded-full bg-neutral-200 hover:border-2 border-black/60'>
+                {user.photoURL ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img 
+                    src={user.photoURL} 
+                    alt={user.displayName || "User"} 
+                    className="h-full w-full object-cover rounded-full"
+                  />
+                ) : (
+                  <div className="h-full w-full rounded-full bg-gray-300 flex items-center justify-center">
+                    <span className="text-xl font-semibold text-gray-600">
+                      {user.displayName ? user.displayName.charAt(0).toUpperCase() : "U"}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className='w-[200px] lg:mr-16 mr-3'>
+              <DropdownMenuLabel className=''>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>{user.displayName}</DropdownMenuItem>
+              <DropdownMenuItem>{user.email}</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleSignOut}><LogOut className='w-9 h-9 text-[#1b3d58]'/> <p>Log Out</p></DropdownMenuItem>
+
+            </DropdownMenuContent>
+          </DropdownMenu>
           </div>
+          
           <HistorySection/>
           <ChatInterface/>
           
