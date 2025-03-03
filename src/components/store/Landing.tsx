@@ -15,9 +15,9 @@ const Landing = () => {
             <div className='relative'>
                 <Image src={HeroImage} alt="Hero Image" className='absolute w-screen lg:h-[100dvh] h-[99dvh] overflow-hidden' style={{ objectFit: 'cover', objectPosition: 'center' }}/>
                 <div className='relative flex justify-center lg:items-center lg:h-[92dvh] h-[99dvh]'>
-                    <div className='md:w-3/4 w-full text-center mt-60 md:mt-72 lg:mt-0'>
+                    <div className='md:w-3/4 w-full text-center mt-52 md:mt-72 lg:mt-0'>
                         <motion.p className=' md:text-7xl text-[40px] leading-tight font-semibold' initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 0.8 }} transition={{ duration: 1 }}>Your <span className='text-[#5c86a9]'>Mental Health</span> Companion, Anytime, Anywhere.</motion.p>
-                        <motion.p className='font-semibold md:text-xl text-xl md:mt-16 mt-9 px-3 md:px-0' initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1 }}>Talk to a supportive chatbot designed to help you through tough moments.</motion.p>
+                        <motion.p className='font-semibold md:text-xl text-xl md:mt-16 mt-2 px-3 md:px-0' initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1 }}>Talk to a supportive chatbot designed to help you through tough moments.</motion.p>
                         <div className='group'>
                             <Link href='./chat-area' className='text-lg font-semibold bg-[#5c86a9] w-[280px] py-5 rounded-[100px] mx-auto absolute lg:bottom-[62px] md:bottom-[192px]  bottom-[162px] lg:right-[39%] right-[10%] left-[10%] lg:left-[39%] group-hover:bg-[#5c86a9]/80'>Start Chatting</Link>
                             <Link href='./chat-area' className='group-hover:bg-[#5c86a9]/80 bg-[#5c86a9] mx-auto h-10 w-60 rounded-[50%] absolute lg:bottom-[49px] md:bottom-[179px] bottom-[149px] lg:right-[42%] right-[10%] lg:left-[42%] left-[10%]' />
