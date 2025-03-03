@@ -1,10 +1,23 @@
-// // src/app/chat/page.tsx
+import React from 'react'
+
+const page = () => {
+  return (
+    <div>
+      
+    </div>
+  )
+}
+
+export default page
+
+// src/app/chat/page.tsx
 // "use client";
 // import ProtectedRoute from '@/components/store/ProtectedRoute';
 // import UserProfile from '@/components/store/UserProfile';
 // import { UserAuth } from '@/app/context/AuthContext';
 
 // export default function ChatPage() {
+  
 //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
 //   const { user, logOut } = UserAuth();
 

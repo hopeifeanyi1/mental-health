@@ -1,4 +1,16 @@
-// // src/app/components/UserProfile.tsx
+import React from 'react'
+
+const UserProfile = () => {
+  return (
+    <div>
+      
+    </div>
+  )
+}
+
+export default UserProfile
+
+// src/app/components/UserProfile.tsx
 // "use client";
 // import { useState } from 'react';
 
