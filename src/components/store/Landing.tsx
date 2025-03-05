@@ -1,13 +1,34 @@
 'use client'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { HeroImage, Jane, John, Section2, Section3a, Section3b } from '@/assets/svgs'
-import Link from 'next/link'
 import Image from 'next/image'
 import Footer from './Footer'
 import { motion } from 'framer-motion'
+import { UserAuth } from "@/app/context/AuthContext";
+
 
 
 const Landing = () => {
+
+    const { user, googleSignIn } = UserAuth();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [loading, setLoading] = useState(true);
+    
+    const handleSignIn = async () => {
+        try {
+          await googleSignIn();
+        } catch (error) {
+          console.log(error);
+        }
+    };
+    
+    useEffect(() => {
+        const checkAuthentication = async () => {
+          await new Promise((resolve) => setTimeout(resolve, 50));
+          setLoading(false);
+        };
+        checkAuthentication();
+    }, [user]);
     
   return (
     <div className='text-white relative'>
@@ -19,8 +40,8 @@ const Landing = () => {
                         <motion.p className=' md:text-7xl text-[40px] leading-tight font-semibold' initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 0.8 }} transition={{ duration: 1 }}>Your <span className='text-[#5c86a9]'>Mental Health</span> Companion, Anytime, Anywhere.</motion.p>
                         <motion.p className='font-semibold md:text-xl text-xl md:mt-16 mt-2 px-3 md:px-0' initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1 }}>Talk to a supportive chatbot designed to help you through tough moments.</motion.p>
                         <div className='group'>
-                            <Link href='./chat-area' className='text-lg font-semibold bg-[#5c86a9] w-[280px] py-5 rounded-[100px] mx-auto absolute lg:bottom-[62px] md:bottom-[192px]  bottom-[162px] lg:right-[39%] right-[10%] left-[10%] lg:left-[39%] group-hover:bg-[#5c86a9]/80'>Start Chatting</Link>
-                            <Link href='./chat-area' className='group-hover:bg-[#5c86a9]/80 bg-[#5c86a9] mx-auto h-10 w-60 rounded-[50%] absolute lg:bottom-[49px] md:bottom-[179px] bottom-[149px] lg:right-[42%] right-[10%] lg:left-[42%] left-[10%]' />
+                            <div onClick={handleSignIn} className='text-lg font-semibold bg-[#5c86a9] w-[280px] py-5 rounded-[100px] mx-auto absolute lg:bottom-[62px] md:bottom-[192px]  bottom-[162px] lg:right-[39%] right-[10%] left-[10%] lg:left-[39%] group-hover:bg-[#5c86a9]/80'>Start Chatting</div>
+                            <div onClick={handleSignIn} className='group-hover:bg-[#5c86a9]/80 bg-[#5c86a9] mx-auto h-10 w-60 rounded-[50%] absolute lg:bottom-[49px] md:bottom-[179px] bottom-[149px] lg:right-[42%] right-[10%] lg:left-[42%] left-[10%]' />
                             <div className='bg-[#5c86a9] mx-auto h-10 w-[100px] rounded-[50%] absolute lg:bottom-[26px] md:bottom-[156px] bottom-[126px] lg:right-[45%] right-[15%] lg:left-[45%] left-[15%]' />
                             <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1.2 }} className='bg-[#5c86a9] mx-auto h-7 rounded-[50%] absolute lg:bottom-[-7px] md:bottom-[123px] bottom-[93px] lg:right-[47%] right-[15%] left-[15%] lg:left-[47%] w-16'/>
                             <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1.3 }} className='absolute lg:bottom-[-122px] bottom-[-49px] lg:right-[37%] lg:left-[37%] md:right-[25%] md:left-[25%] left-[10%] right-[10%] bg-[#5c86a9] mx-auto h-24 lg:w-[26%] md:w-[50%] w-[80%] mt-7 rounded-[70%]'/>

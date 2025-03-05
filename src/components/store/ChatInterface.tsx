@@ -4,15 +4,35 @@ import { SendIcon } from "./Icon";
 import { useChat } from 'ai/react';
 import Link from "next/link";
 import Logo from "./Logo";
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle, PlusCircle } from "lucide-react";
+import { UserAuth } from "@/app/context/AuthContext";
+import { saveChatMessage, getChatMessages } from "@/services/chatService";
+import { Timestamp } from "firebase/firestore";
+import { v4 as uuidv4 } from 'uuid';
 
+interface ChatInterfaceProps {
+  selectedConversationId: string | null;
+  onNewChat: () => void;
+}
 
-const ChatInterface = () => {
+const ChatInterface = ({ selectedConversationId, onNewChat }: ChatInterfaceProps) => {
+  const { user } = UserAuth();
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [minTimeElapsed, setMinTimeElapsed] = useState(true);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [conversationId, setConversationId] = useState<string>('');
+
+  // Initialize conversation ID when component mounts or when selected conversation changes
+  useEffect(() => {
+    if (selectedConversationId) {
+      setConversationId(selectedConversationId);
+    } else {
+      // Create a new conversation ID when no conversation is selected
+      setConversationId(uuidv4());
+    }
+  }, [selectedConversationId]);
 
   const { 
     messages, 
@@ -20,30 +40,85 @@ const ChatInterface = () => {
     handleInputChange, 
     handleSubmit, 
     isLoading, 
-    error 
+    error,
+    setMessages 
   } = useChat({
     api: '/api/chat',
+    id: conversationId,
+    onFinish: async (message) => {
+      if (user && conversationId) {
+        try {
+          // Only save messages if there's input (prevents empty messages)
+          if (input.trim()) {
+            // Save user message
+            await saveChatMessage({
+              userId: user.uid,
+              role: 'user',
+              content: input,
+              timestamp: Timestamp.now(),
+              conversationId: conversationId
+            });
+
+            // Save AI response
+            await saveChatMessage({
+              userId: user.uid,
+              role: 'assistant',
+              content: message.content,
+              timestamp: Timestamp.now(),
+              conversationId: conversationId
+            });
+          }
+        } catch (error) {
+          console.error("Failed to save chat message:", error);
+        }
+      }
+    },
     onError: (err) => {
       console.error('Chat Error:', err);
     }
   });
 
- useEffect(() => {
-  if (isLoading) {
-    setMinTimeElapsed(false);
-    timeoutRef.current = setTimeout(() => {
-      setMinTimeElapsed(true);
-    }, 3000);
-  } else {
-    setMinTimeElapsed(true);
-  }
+  // Load existing messages when conversation changes
+  useEffect(() => {
+    const loadConversation = async () => {
+      if (user && selectedConversationId) {
+        try {
+          const chatMessages = await getChatMessages(selectedConversationId);
+          // Format messages for the chat UI
+          const formattedMessages = chatMessages.map(msg => ({
+            id: msg.id || String(msg.timestamp.toMillis()),
+            role: msg.role as 'user' | 'assistant',
+            content: msg.content
+          }));
+          setMessages(formattedMessages);
+        } catch (error) {
+          console.error("Failed to load conversation:", error);
+        }
+      } else {
+        // Clear messages for new chat
+        setMessages([]);
+      }
+    };
 
-  return () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
+    loadConversation();
+  }, [user, selectedConversationId, setMessages]);
+
+  useEffect(() => {
+    if (isLoading) {
+      setMinTimeElapsed(false);
+      timeoutRef.current = setTimeout(() => {
+        setMinTimeElapsed(true);
+      }, 3000);
+    } else {
+      setMinTimeElapsed(true);
     }
-  };
-}, [isLoading]);
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [isLoading]);
 
   const showTyping = isLoading || !minTimeElapsed;
 
@@ -54,7 +129,6 @@ const ChatInterface = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages, showTyping]);
-
 
   useEffect(() => {
     if (!input && textAreaRef.current) {
@@ -82,37 +156,65 @@ const ChatInterface = () => {
     }
   };
 
+  const handleNewChatClick = () => {
+    setConversationId(uuidv4());
+    setMessages([]);
+    onNewChat();
+  };
+
   return (
     <div className="col-span-8 lg:col-span-5">
       <div className="lg:hidden block h-[6dvh] px-5 py-2 bg-zinc-200">
         <Link href='./' className="my-auto "><Logo/></Link>
       </div>
       <div className="bg-zinc-200 pt-3 pb-6 relative lg:rounded-2xl lg:h-[80dvh] h-[94dvh] ">
+        <div className="flex justify-between items-center px-6 mb-3">
+          <h2 className="font-semibold">
+            {selectedConversationId ? 'Conversation' : 'New Chat'}
+          </h2>
+          <button 
+            onClick={handleNewChatClick}
+            className="flex items-center text-sm bg-blue-100 hover:bg-blue-200 rounded-full px-3 py-1"
+          >
+            <PlusCircle size={16} className="mr-1" />
+            New Chat
+          </button>
+        </div>
+        
         <div className="lg:h-[calc(80dvh-135px)] h-[calc(80dvh-10px)] overflow-y-auto space-y-4 px-4 overflow-x-hidden">
-          {messages.map((m) => (
-            <div 
-              key={m.id} 
-              className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                m.role === 'user' ? 'bg-blue-200' : 'bg-gray-100'
-              }`}>
-                <div className="text-xs text-gray-500 mb-1">
-                  {m.role === 'user' ? 'You' : 'Mental Health Assistant'}
-                </div>
-                <div className="text-md whitespace-pre-wrap">
-                  {m.content}
-                </div>
+          {messages.length === 0 ? (
+            <div className="flex h-full items-center justify-center">
+              <div className="text-center text-gray-500">
+                <p>Start a new conversation</p>
+                <p className="text-sm">Your messages will be saved automatically</p>
               </div>
             </div>
-          ))}
+          ) : (
+            messages.map((m) => (
+              <div 
+                key={m.id} 
+                className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                  m.role === 'user' ? 'bg-blue-200' : 'bg-gray-100'
+                }`}>
+                  <div className="text-xs text-gray-500 mb-1">
+                    {m.role === 'user' ? 'You' : 'Mental Health Assistant'}
+                  </div>
+                  <div className="text-md whitespace-pre-wrap">
+                    {m.content}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
           
           {showTyping && (
-                <div className="text-sm flex pl-4 ">
-                  <div className="bg-black/70 rounded-full w-[10px] h-[10px] mr-[8px] animate-pulse delay-0"/>
-                  <div className="bg-black/70 rounded-full w-[10px] h-[10px] mr-[8px] animate-pulse delay-200"/>
-                  <div className="bg-black/70 rounded-full w-[10px] h-[10px] animate-pulse delay-400"/>
-                </div>
+            <div className="text-sm flex pl-4 ">
+              <div className="bg-black/70 rounded-full w-[10px] h-[10px] mr-[8px] animate-pulse delay-0"/>
+              <div className="bg-black/70 rounded-full w-[10px] h-[10px] mr-[8px] animate-pulse delay-200"/>
+              <div className="bg-black/70 rounded-full w-[10px] h-[10px] animate-pulse delay-400"/>
+            </div>
           )}
 
           {error && (

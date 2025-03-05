@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import ChatInterface from "@/components/store/ChatInterface";
 import HistorySection from "@/components/store/HistorySection";
 import { useRouter } from "next/navigation";
@@ -8,20 +8,13 @@ import { LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 import { UserAuth } from "../context/AuthContext";
 import ProtectedRoute from "@/components/store/ProtectedRoute";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const Page = () => {
   const { user, logOut } = UserAuth();
   const router = useRouter();
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
 
-  // Redirect if user is null
   useEffect(() => {
     if (!user) {
       router.push("/");
@@ -31,9 +24,19 @@ const Page = () => {
   const handleSignOut = async () => {
     try {
       await logOut();
+      router.push("/");
     } catch (error) {
       console.log(error);
     }
+  };
+
+  const handleSelectConversation = (conversationId: string) => {
+    setSelectedConversationId(conversationId || null);
+  };
+
+  const handleNewChat = () => {
+    // Clear the selected conversation
+    setSelectedConversationId(null);
   };
 
   return (
@@ -78,15 +81,22 @@ const Page = () => {
                 <DropdownMenuItem>{user.email || "No Email"}</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="w-9 h-9 text-[#1b3d58]" /> <p>Log Out</p>
+                  <LogOut className="w-4 h-4 mr-2 text-[#1b3d58]" /> Log Out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         )}
 
-        <HistorySection />
-        <ChatInterface />
+        <HistorySection 
+          selectedConversationId={selectedConversationId} 
+          onSelectConversation={handleSelectConversation} 
+        />
+        
+        <ChatInterface 
+          selectedConversationId={selectedConversationId}
+          onNewChat={handleNewChat}
+        />
       </motion.div>
     </ProtectedRoute>
   );
