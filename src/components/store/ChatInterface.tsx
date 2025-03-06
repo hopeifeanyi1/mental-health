@@ -82,8 +82,6 @@ const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation
     }
   });
 
-  // Update the loadConversation function in ChatInterface.tsx
-
 // Load existing messages when conversation changes
   useEffect(() => {
     const loadConversation = async () => {
@@ -214,7 +212,7 @@ const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation
             <div className="flex h-full items-center justify-center">
               <div className="text-center text-gray-500">
                 <p className="md:text-xl text-lg">Welcome {user?.displayName?.split(" ")[0]}</p>
-                <p className="md:text-[16px] text-md">I&apos;m here to listen. How are you feeling today</p>
+                <p className="md:text-[16px] text-md">I&apos;m here to listen. How are you feeling today?</p>
               </div>
             </div>
           ) : (

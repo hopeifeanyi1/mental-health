@@ -1,5 +1,3 @@
-// src/services/chatService.ts
-
 import { db } from '@/app/firebase';
 import { 
   collection, 
@@ -11,6 +9,7 @@ import {
   Timestamp,
   deleteDoc,
   doc,
+  updateDoc,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   documentId
 } from 'firebase/firestore';
@@ -22,6 +21,7 @@ export interface ChatMessage {
   content: string;
   timestamp: Timestamp;
   conversationId: string;
+  title?: string; // Add title field for conversations
 }
 
 // Save a chat message to Firestore
@@ -108,3 +108,70 @@ export const deleteConversation = async (conversationId: string, userId: string)
     throw new Error("Failed to delete conversation. Please try again later.");
   }
 };
+
+// Create a new function to save conversation title
+export const saveConversationTitle = async (conversationId: string, userId: string, title: string) => {
+  try {
+    // First, check if a title document already exists
+    const titleCollection = collection(db, 'conversation_titles');
+    const q = query(
+      titleCollection,
+      where('userId', '==', userId),
+      where('conversationId', '==', conversationId)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) {
+      // No title document exists, create a new one
+      await addDoc(titleCollection, {
+        userId,
+        conversationId,
+        title,
+        timestamp: Timestamp.now()
+      });
+    } else {
+      // Update existing title document
+      const titleDoc = querySnapshot.docs[0];
+      await updateDoc(doc(db, 'conversation_titles', titleDoc.id), {
+        title,
+        timestamp: Timestamp.now()
+      });
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error saving conversation title:", error);
+    throw new Error("Failed to save conversation title. Please try again later.");
+  }
+};
+
+// Get conversation titles
+export const getConversationTitles = async (userId: string) => {
+    try {
+      // Make sure userId exists before making the query
+      if (!userId) {
+        console.error("User ID is required to fetch conversation titles");
+        return {}; // Return empty object instead of throwing error
+      }
+      
+      const q = query(
+        collection(db, 'conversation_titles'),
+        where('userId', '==', userId)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const titles: Record<string, string> = {};
+      
+      querySnapshot.forEach(doc => {
+        const data = doc.data();
+        titles[data.conversationId] = data.title;
+      });
+      
+      return titles;
+    } catch (error) {
+      console.error("Error getting conversation titles:", error);
+      // Return empty object instead of throwing error to prevent UI crashes
+      return {};
+    }
+  };

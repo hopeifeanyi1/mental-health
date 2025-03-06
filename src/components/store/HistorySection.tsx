@@ -3,9 +3,26 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Trash2, Edit2 } from "lucide-react";
 import { UserAuth } from "@/app/context/AuthContext";
-import { getChatHistory, deleteConversation, ChatMessage } from "@/services/chatService";
+import { 
+  getChatHistory, 
+  deleteConversation, 
+  ChatMessage, 
+  saveConversationTitle,
+  getConversationTitles
+} from "@/services/chatService";
 import { formatDistanceToNow } from 'date-fns';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 
 interface HistorySectionProps {
@@ -19,6 +36,10 @@ const HistorySection = ({ selectedConversationId, onSelectConversation }: Histor
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [conversationTitles, setConversationTitles] = useState<Record<string, string>>({});
+  const [newTitle, setNewTitle] = useState('');
+  const [currentEditingId, setCurrentEditingId] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchChatHistory = async () => {
@@ -28,6 +49,15 @@ const HistorySection = ({ selectedConversationId, onSelectConversation }: Histor
           setError(null);
           const history = await getChatHistory(user.uid);
           setConversations(history);
+          
+          try {
+            // Handle titles separately, so if it fails, we still have chat history
+            const titles = await getConversationTitles(user.uid);
+            setConversationTitles(titles);
+          } catch (titleError) {
+            console.error("Failed to fetch conversation titles:", titleError);
+            // Don't set an error - the app can function without titles
+          }
         } catch (error) {
           console.error("Failed to fetch chat history:", error);
           setError("Failed to load chat history. Please try again later.");
@@ -36,8 +66,9 @@ const HistorySection = ({ selectedConversationId, onSelectConversation }: Histor
         }
       }
     };
-
+  
     fetchChatHistory();
+    
     
     // Set up a refresh interval (every 30 seconds)
     const intervalId = setInterval(fetchChatHistory, 30000);
@@ -53,6 +84,10 @@ const HistorySection = ({ selectedConversationId, onSelectConversation }: Histor
           setError(null);
           const history = await getChatHistory(user.uid);
           setConversations(prev => ({...prev, ...history}));
+          
+          // Refresh titles
+          const titles = await getConversationTitles(user.uid);
+          setConversationTitles(titles);
         } catch (error) {
           console.error("Failed to update conversation:", error);
           // Don't show error here to avoid disrupting the UI
@@ -63,40 +98,96 @@ const HistorySection = ({ selectedConversationId, onSelectConversation }: Histor
     }
   }, [selectedConversationId, user]);
 
-
-const handleDeleteConversation = async (conversationId: string, e: React.MouseEvent) => {
-  e.stopPropagation(); // Prevent the conversation from being selected when deleting
-  
-  if (!user) return; // Make sure user is defined
-  
-  try {
-    // Pass the userId parameter here
-    await deleteConversation(conversationId, user.uid);
+  const handleDeleteConversation = async (conversationId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent the conversation from being selected when deleting
     
-    // Update state to remove the deleted conversation
-    setConversations(prev => {
-      const updated = {...prev};
-      delete updated[conversationId];
-      return updated;
-    });
+    if (!user) return; // Make sure user is defined
     
-    // Deselect if the deleted conversation was selected
-    if (selectedConversationId === conversationId) {
-      onSelectConversation('');
+    try {
+      // Pass the userId parameter here
+      await deleteConversation(conversationId, user.uid);
+      
+      // Update state to remove the deleted conversation
+      setConversations(prev => {
+        const updated = {...prev};
+        delete updated[conversationId];
+        return updated;
+      });
+      
+      // Also remove the title
+      setConversationTitles(prev => {
+        const updated = {...prev};
+        delete updated[conversationId];
+        return updated;
+      });
+      
+      // Deselect if the deleted conversation was selected
+      if (selectedConversationId === conversationId) {
+        onSelectConversation('');
+      }
+    } catch (error) {
+      console.error("Failed to delete conversation:", error);
+      setError("Failed to delete conversation. Please try again.");
+      // Clear error after 3 seconds
+      setTimeout(() => setError(null), 3000);
     }
-  } catch (error) {
-    console.error("Failed to delete conversation:", error);
-    setError("Failed to delete conversation. Please try again.");
-    // Clear error after 3 seconds
-    setTimeout(() => setError(null), 3000);
-  }
-};
+  };
+
+  const handleEditClick = (conversationId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering conversation selection
+    setCurrentEditingId(conversationId);
+    setNewTitle(conversationTitles[conversationId] || '');
+    setDialogOpen(true);
+  };
+
+  const handleRenameSubmit = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    if (!user || !currentEditingId || !newTitle.trim()) return;
+    
+    try {
+      await saveConversationTitle(currentEditingId, user.uid, newTitle.trim());
+      
+      // Update local state
+      setConversationTitles(prev => ({
+        ...prev,
+        [currentEditingId]: newTitle.trim()
+      }));
+      
+      setDialogOpen(false);
+      setCurrentEditingId(null);
+      setNewTitle('');
+    } catch (error) {
+      console.error("Failed to rename conversation:", error);
+      setError("Failed to rename conversation. Please try again.");
+      setTimeout(() => setError(null), 3000);
+    }
+  };
+
+  const getConversationTitle = (conversationId: string, messages: ChatMessage[]) => {
+    // First check for custom title
+    if (conversationTitles[conversationId]) {
+      return conversationTitles[conversationId];
+    }
+    
+    // Fallback to first user message
+    const userMessages = messages.filter(m => m.role === 'user');
+    return userMessages.length > 0 
+      ? userMessages[0].content 
+      : 'New conversation';
+  };
 
   const filteredConversations = Object.entries(conversations)
     // Filter by search term
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    .filter(([_, messages]) => {
+    .filter(([conversationId, messages]) => {
       if (!searchTerm.trim()) return true;
+      
+      // Check if title matches search
+      if (conversationTitles[conversationId]?.toLowerCase().includes(searchTerm.toLowerCase())) {
+        return true;
+      }
+      
+      // Check if any message content matches search
       return messages.some(msg => 
         msg.content.toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -149,11 +240,8 @@ const handleDeleteConversation = async (conversationId: string, e: React.MouseEv
             filteredConversations.map(([conversationId, messages]) => {
               if (messages.length === 0) return null;
               
-              // Get the first user message for preview
-              const userMessages = messages.filter(m => m.role === 'user');
-              const previewMessage = userMessages.length > 0 
-                ? userMessages[0].content 
-                : 'New conversation';
+              // Get title (custom or first message)
+              const displayTitle = getConversationTitle(conversationId, messages);
               
               // Get the last message's timestamp for showing the time
               const lastMessage = messages[messages.length - 1];
@@ -172,9 +260,9 @@ const handleDeleteConversation = async (conversationId: string, e: React.MouseEv
                   <div className='flex items-center space-x-3 text-left'>
                     <div>
                       <p className='font-medium lg:text-sm text-[15px] truncate max-w-[150px]'>
-                        {previewMessage.length > 30 
-                          ? `${previewMessage.slice(0, 30)}...` 
-                          : previewMessage}
+                        {displayTitle.length > 30 
+                          ? `${displayTitle.slice(0, 30)}...` 
+                          : displayTitle}
                       </p>
                       <p className='lg:text-xs text-[15px] text-gray-500'>
                         {formatDistanceToNow(timestamp, { addSuffix: true })}
@@ -190,8 +278,12 @@ const handleDeleteConversation = async (conversationId: string, e: React.MouseEv
                       </div>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                      <DropdownMenuItem><Edit2 className='mr-1'/> Rename</DropdownMenuItem>
-                      <DropdownMenuItem className='text-red-600' onClick={(e) => handleDeleteConversation(conversationId, e)}><Trash2 className='mr-1'/> Delete</DropdownMenuItem>
+                      <DropdownMenuItem onClick={(e) => handleEditClick(conversationId, e)}>
+                        <Edit2 className='mr-1 inline w-4 h-4'/> Rename
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className='text-red-600' onClick={(e) => handleDeleteConversation(conversationId, e)}>
+                        <Trash2 className='mr-1'/> Delete
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -200,6 +292,34 @@ const handleDeleteConversation = async (conversationId: string, e: React.MouseEv
           )}
         </div>
       </div>
+
+      {/* Rename Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename Chat</DialogTitle>
+            <DialogDescription>
+              Enter a new name for this chat conversation
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Input
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              placeholder="Enter chat name"
+              className="w-full"
+            />
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button onClick={handleRenameSubmit} disabled={!newTitle.trim()}>
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
