@@ -307,7 +307,7 @@ const HistorySection = ({ selectedConversationId, onSelectConversation }: Histor
 
       {/* Rename Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent className='w-[90vw] md:w-auto rounded-md'>
           <DialogHeader>
             <DialogTitle>Rename Chat</DialogTitle>
             <DialogDescription>
@@ -324,7 +324,7 @@ const HistorySection = ({ selectedConversationId, onSelectConversation }: Histor
           </div>
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline" className='mt-2'>Cancel</Button>
             </DialogClose>
             <Button onClick={handleRenameSubmit} disabled={!newTitle.trim()}>
               Save
