@@ -97,8 +97,9 @@ const Page = () => {
         
         <ChatInterface 
           selectedConversationId={selectedConversationId}
-          onNewChat={handleNewChat}
-        />
+          onNewChat={handleNewChat} onSelectConversation={function (): void {
+            throw new Error("Function not implemented.");
+          } }        />
       </motion.div>
     </ProtectedRoute>
   );

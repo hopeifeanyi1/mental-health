@@ -16,9 +16,10 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTrigger } from
 interface ChatInterfaceProps {
   selectedConversationId: string | null;
   onNewChat: () => void;
+  onSelectConversation: (id: string) => void; // Add this line to include the missing prop
 }
 
-const ChatInterface = ({ selectedConversationId, onNewChat }: ChatInterfaceProps) => {
+const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation }: ChatInterfaceProps) => {
   const { user } = UserAuth();
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const [isExpanded, setIsExpanded] = useState(false);
