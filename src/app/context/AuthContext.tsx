@@ -41,7 +41,7 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps): JSX
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
       // After successful sign-in, redirect to chat page
-      router.push("/chat");
+      router.push("/chat-area");
     } catch (error) {
       console.error("Login failed:", error);
     }
