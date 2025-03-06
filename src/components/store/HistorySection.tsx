@@ -1,10 +1,13 @@
 // src/components/store/HistorySection.tsx
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Search, Trash2, MessageCircle } from "lucide-react";
+import { Search, Trash2, Edit2 } from "lucide-react";
 import { UserAuth } from "@/app/context/AuthContext";
 import { getChatHistory, deleteConversation, ChatMessage } from "@/services/chatService";
 import { formatDistanceToNow } from 'date-fns';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+
+
 
 interface HistorySectionProps {
   selectedConversationId: string | null;
@@ -16,16 +19,19 @@ const HistorySection = ({ selectedConversationId, onSelectConversation }: Histor
   const [conversations, setConversations] = useState<Record<string, ChatMessage[]>>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchChatHistory = async () => {
       if (user) {
         try {
           setIsLoading(true);
+          setError(null);
           const history = await getChatHistory(user.uid);
           setConversations(history);
         } catch (error) {
           console.error("Failed to fetch chat history:", error);
+          setError("Failed to load chat history. Please try again later.");
         } finally {
           setIsLoading(false);
         }
@@ -45,10 +51,12 @@ const HistorySection = ({ selectedConversationId, onSelectConversation }: Histor
     if (user && selectedConversationId) {
       const fetchSingleConversation = async () => {
         try {
+          setError(null);
           const history = await getChatHistory(user.uid);
           setConversations(prev => ({...prev, ...history}));
         } catch (error) {
           console.error("Failed to update conversation:", error);
+          // Don't show error here to avoid disrupting the UI
         }
       };
       
@@ -56,6 +64,7 @@ const HistorySection = ({ selectedConversationId, onSelectConversation }: Histor
     }
   }, [selectedConversationId, user]);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleDeleteConversation = async (conversationId: string, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent the conversation from being selected when deleting
     
@@ -75,6 +84,9 @@ const HistorySection = ({ selectedConversationId, onSelectConversation }: Histor
       }
     } catch (error) {
       console.error("Failed to delete conversation:", error);
+      setError("Failed to delete conversation. Please try again.");
+      // Clear error after 3 seconds
+      setTimeout(() => setError(null), 3000);
     }
   };
 
@@ -99,13 +111,13 @@ const HistorySection = ({ selectedConversationId, onSelectConversation }: Histor
     });
 
   return (
-    <div className='col-span-3 lg:block hidden'>
-      <div className='bg-zinc-200 p-6 relative rounded-2xl h-[80dvh]'>
-        <div className="flex justify-between items-center mb-4">
+    <div className=''>
+      <div className='lg:bg-zinc-200 lg:p-6 relative rounded-2xl h-[80dvh] lg:h-[85dvh] text-black'>
+        <div className="flex justify-between items-center mb-4 mt-10 lg:mt-0">
           <p className='font-semibold text-xl'>My Chats</p>
         </div>
         
-        <div className='flex flex-row absolute top-16 left-[5%] bg-white h-[45px] rounded-full w-[90%]'>
+        <div className='flex flex-row absolute lg:border-none border border-1 lg:top-16 lg:left-[5%] top-[40px] left-0 bg-white h-[45px] rounded-full lg:w-[90%] w-[99%]'>
           <Search size={23} color="#737373" className='my-auto ml-2'/>
           <input
             type="text"
@@ -117,6 +129,12 @@ const HistorySection = ({ selectedConversationId, onSelectConversation }: Histor
         </div>
 
         <div className='mt-24 space-y-2 overflow-y-auto h-[calc(80dvh-250px)]'>
+          {error && (
+            <div className='text-red-500 p-2 bg-red-50 rounded-lg my-2'>
+              {error}
+            </div>
+          )}
+          
           {isLoading ? (
             <div className='text-center text-gray-500 mt-10'>
               Loading conversations...
@@ -149,28 +167,31 @@ const HistorySection = ({ selectedConversationId, onSelectConversation }: Histor
                   }`}
                   onClick={() => onSelectConversation(conversationId)}
                 >
-                  <div className='flex items-center space-x-3'>
-                    <MessageCircle className='text-gray-500' size={24} />
+                  <div className='flex items-center space-x-3 text-left'>
                     <div>
-                      <p className='font-medium text-sm truncate max-w-[150px]'>
+                      <p className='font-medium lg:text-sm text-[15px] truncate max-w-[150px]'>
                         {previewMessage.length > 30 
                           ? `${previewMessage.slice(0, 30)}...` 
                           : previewMessage}
                       </p>
-                      <p className='text-xs text-gray-500'>
+                      <p className='lg:text-xs text-[15px] text-gray-500'>
                         {formatDistanceToNow(timestamp, { addSuffix: true })}
                       </p>
                     </div>
                   </div>
-                  <button 
-                    onClick={(e) => handleDeleteConversation(conversationId, e)}
-                    className='hover:bg-red-100 rounded-full p-1 group'
-                  >
-                    <Trash2 
-                      size={18} 
-                      className='text-gray-500 hover:text-red-500 group-hover:scale-110 transition'
-                    />
-                  </button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger>
+                      <div className='flex space-x-[2px]'>
+                        <div className='bg-black w-1 h-1 rounded-full'></div>
+                        <div className='bg-black w-1 h-1 rounded-full'></div>
+                        <div className='bg-black w-1 h-1 rounded-full'></div>
+                      </div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem><Edit2 className='mr-1'/> Rename</DropdownMenuItem>
+                      <DropdownMenuItem className='text-red-600' onClick={(e) => handleDeleteConversation(conversationId, e)}><Trash2 className='mr-1'/> Delete</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               );
             })

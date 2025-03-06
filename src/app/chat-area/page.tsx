@@ -10,6 +10,7 @@ import { UserAuth } from "../context/AuthContext";
 import ProtectedRoute from "@/components/store/ProtectedRoute";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
+
 const Page = () => {
   const { user, logOut } = UserAuth();
   const router = useRouter();
@@ -42,7 +43,7 @@ const Page = () => {
   return (
     <ProtectedRoute>
       <motion.div
-        className="relative grid grid-cols-8 gap-x-12 h-[100dvh] lg:px-36 lg:pt-[12dvh] lg:pb-[7dvh] p-0"
+        className="relative grid grid-cols-8 gap-x-12 h-[100dvh] lg:px-36 lg:pt-[10dvh] lg:pb-[2dvh] p-0"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -87,11 +88,12 @@ const Page = () => {
             </DropdownMenu>
           </div>
         )}
-
-        <HistorySection 
-          selectedConversationId={selectedConversationId} 
-          onSelectConversation={handleSelectConversation} 
-        />
+        <div className="lg:block hidden col-span-3">
+          <HistorySection 
+            selectedConversationId={selectedConversationId} 
+            onSelectConversation={handleSelectConversation} 
+          />
+        </div>
         
         <ChatInterface 
           selectedConversationId={selectedConversationId}

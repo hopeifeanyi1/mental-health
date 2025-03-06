@@ -1,14 +1,17 @@
 'use client';
 import React, { useState, useRef, useEffect } from "react";
-import { SendIcon } from "./Icon";
+import { SendIcon, Bars } from "./Icon";
 import { useChat } from 'ai/react';
 import Link from "next/link";
 import Logo from "./Logo";
-import { LoaderCircle, PlusCircle } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 import { UserAuth } from "@/app/context/AuthContext";
 import { saveChatMessage, getChatMessages } from "@/services/chatService";
 import { Timestamp } from "firebase/firestore";
 import { v4 as uuidv4 } from 'uuid';
+import { TbMessageCirclePlus } from "react-icons/tb";
+import HistorySection from "./HistorySection";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTrigger } from "@/components/ui/sheet"
 
 interface ChatInterfaceProps {
   selectedConversationId: string | null;
@@ -163,21 +166,42 @@ const ChatInterface = ({ selectedConversationId, onNewChat }: ChatInterfaceProps
   };
 
   return (
-    <div className="col-span-8 lg:col-span-5">
+    <div className="col-span-8 lg:col-span-5 ">
       <div className="lg:hidden block h-[6dvh] px-5 py-2 bg-zinc-200">
         <Link href='./' className="my-auto "><Logo/></Link>
       </div>
-      <div className="bg-zinc-200 pt-3 pb-6 relative lg:rounded-2xl lg:h-[80dvh] h-[94dvh] ">
+      <div className="bg-zinc-200 pt-1 pb-6 relative lg:rounded-2xl lg:h-[85dvh] h-[94dvh] ">
         <div className="flex justify-between items-center px-6 mb-3">
-          <h2 className="font-semibold">
-            {selectedConversationId ? 'Conversation' : 'New Chat'}
-          </h2>
+          <div className="block lg:hidden">
+          <Sheet>
+            <SheetTrigger>
+              <Bars className="w-7 h-7"/> 
+            </SheetTrigger>
+            <SheetContent className="w-[400px] sm:w-[540px]">
+              <SheetHeader>
+                <SheetDescription className="w-full h-full">
+                  <HistorySection 
+                    selectedConversationId={selectedConversationId} 
+                    onSelectConversation={(id) => {
+                      onSelectConversation(id);
+                      // Close the sheet after selecting a conversation
+                      const closeButton = document.querySelector('[data-radix-collection-item]');
+                      if (closeButton && 'click' in closeButton) {
+                        (closeButton as HTMLElement).click();
+                      }
+                    }} 
+                  />
+                </SheetDescription>
+              </SheetHeader>
+            </SheetContent>
+          </Sheet>
+          </div>
           <button 
             onClick={handleNewChatClick}
-            className="flex items-center text-sm bg-blue-100 hover:bg-blue-200 rounded-full px-3 py-1"
+            className="flex items-center text-sm md:bg-[#90b0cb] md:hover:bg-[#5e92bc] rounded-full px-3 md:py-1.5 md:mx-auto mt-0 md:mt-3"
           >
-            <PlusCircle size={16} className="mr-1" />
-            New Chat
+            <TbMessageCirclePlus size={25} />
+            <p className="ml-1.5 text-[16px] hidden md:block">New Chat</p>
           </button>
         </div>
         
@@ -185,8 +209,8 @@ const ChatInterface = ({ selectedConversationId, onNewChat }: ChatInterfaceProps
           {messages.length === 0 ? (
             <div className="flex h-full items-center justify-center">
               <div className="text-center text-gray-500">
-                <p>Start a new conversation</p>
-                <p className="text-sm">Your messages will be saved automatically</p>
+                <p className="md:text-xl text-lg">Welcome {user?.displayName?.split(" ")[0]}</p>
+                <p className="md:text-[16px] text-md">I&apos;m here to listen. How are you feeling today</p>
               </div>
             </div>
           ) : (

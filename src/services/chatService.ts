@@ -29,7 +29,7 @@ export const saveChatMessage = async (message: ChatMessage) => {
     return { id: docRef.id, ...message };
   } catch (error) {
     console.error("Error saving message:", error);
-    throw error;
+    throw new Error("Failed to save message. Please check your connection and try again.");
   }
 };
 
@@ -49,7 +49,7 @@ export const getChatMessages = async (conversationId: string) => {
     })) as ChatMessage[];
   } catch (error) {
     console.error("Error getting messages:", error);
-    throw error;
+    throw new Error("Failed to retrieve messages. Please check your permissions and try again.");
   }
 };
 
@@ -81,7 +81,7 @@ export const getChatHistory = async (userId: string) => {
     return conversations;
   } catch (error) {
     console.error("Error getting chat history:", error);
-    throw error;
+    throw new Error("Error getting chat history: Please check your permissions and try again.");
   }
 };
 
@@ -100,6 +100,6 @@ export const deleteConversation = async (conversationId: string) => {
     return true;
   } catch (error) {
     console.error("Error deleting conversation:", error);
-    throw error;
+    throw new Error("Failed to delete conversation. Please try again later.");
   }
 };
