@@ -1,4 +1,3 @@
-// src/components/store/HistorySection.tsx
 "use client";
 import React, { useState, useEffect } from 'react';
 import { Search, Trash2, Edit2 } from "lucide-react";
@@ -177,6 +176,19 @@ const HistorySection = ({ selectedConversationId, onSelectConversation }: Histor
       : 'New conversation';
   };
 
+  const handleConversationClick = (conversationId: string) => {
+    onSelectConversation(conversationId);
+    
+    // If on mobile, close the sheet by clicking the sheet close button
+    if (window.innerWidth < 1024) {
+      // Find and click the sheet close button
+      const closeButton = document.querySelector('[data-radix-collection-item]');
+      if (closeButton instanceof HTMLElement) {
+        closeButton.click();
+      }
+    }
+  };
+
   const filteredConversations = Object.entries(conversations)
     // Filter by search term
     .filter(([conversationId, messages]) => {
@@ -255,7 +267,7 @@ const HistorySection = ({ selectedConversationId, onSelectConversation }: Histor
                     ? 'bg-blue-100' 
                     : 'hover:bg-white/50'
                   }`}
-                  onClick={() => onSelectConversation(conversationId)}
+                  onClick={() => handleConversationClick(conversationId)}
                 >
                   <div className='flex items-center space-x-3 text-left'>
                     <div>
@@ -323,5 +335,4 @@ const HistorySection = ({ selectedConversationId, onSelectConversation }: Histor
     </div>
   );
 };
-
 export default HistorySection;

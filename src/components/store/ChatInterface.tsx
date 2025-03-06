@@ -11,12 +11,12 @@ import { Timestamp } from "firebase/firestore";
 import { v4 as uuidv4 } from 'uuid';
 import { TbMessageCirclePlus } from "react-icons/tb";
 import HistorySection from "./HistorySection";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTrigger } from "@/components/ui/sheet"
 
 interface ChatInterfaceProps {
   selectedConversationId: string | null;
   onNewChat: () => void;
-  onSelectConversation: (id: string) => void; // Add this line to include the missing prop
+  onSelectConversation: (id: string) => void;
 }
 
 const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation }: ChatInterfaceProps) => {
@@ -27,6 +27,7 @@ const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation
   const [minTimeElapsed, setMinTimeElapsed] = useState(true);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [conversationId, setConversationId] = useState<string>('');
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   // Initialize conversation ID when component mounts or when selected conversation changes
   useEffect(() => {
@@ -125,6 +126,13 @@ const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation
     };
   }, [isLoading]);
 
+  // Close the sheet when a conversation is selected
+  useEffect(() => {
+    if (selectedConversationId && isSheetOpen) {
+      setIsSheetOpen(false);
+    }
+  }, [selectedConversationId, isSheetOpen]);
+
   const showTyping = isLoading || !minTimeElapsed;
 
   const scrollToBottom = () => {
@@ -167,6 +175,12 @@ const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation
     onNewChat();
   };
 
+  const handleSelectConversation = (id: string) => {
+    onSelectConversation(id);
+    // This will trigger the useEffect that closes the sheet
+    setIsSheetOpen(false);
+  };
+
   return (
     <div className="col-span-8 lg:col-span-5 ">
       <div className="lg:hidden block h-[6dvh] px-5 py-2 bg-zinc-200">
@@ -175,7 +189,7 @@ const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation
       <div className="bg-zinc-200 pt-1 pb-6 relative lg:rounded-2xl lg:h-[85dvh] h-[94dvh] ">
         <div className="flex justify-between items-center px-6 mb-3">
           <div className="block lg:hidden">
-          <Sheet>
+          <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger>
               <Bars className="w-7 h-7"/> 
             </SheetTrigger>
@@ -184,17 +198,11 @@ const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation
                 <SheetDescription className="w-full h-full">
                   <HistorySection 
                     selectedConversationId={selectedConversationId} 
-                    onSelectConversation={(id) => {
-                      onSelectConversation(id);
-                      // Close the sheet after selecting a conversation
-                      const closeButton = document.querySelector('[data-radix-collection-item]');
-                      if (closeButton && 'click' in closeButton) {
-                        (closeButton as HTMLElement).click();
-                      }
-                    }} 
+                    onSelectConversation={handleSelectConversation} 
                   />
                 </SheetDescription>
               </SheetHeader>
+              <SheetClose className="hidden" />
             </SheetContent>
           </Sheet>
           </div>
@@ -283,5 +291,4 @@ const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation
     </div>
   );
 };
-
 export default ChatInterface;
