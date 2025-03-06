@@ -11,6 +11,8 @@ import {
   Timestamp,
   deleteDoc,
   doc,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  documentId
 } from 'firebase/firestore';
 
 export interface ChatMessage {
@@ -34,10 +36,12 @@ export const saveChatMessage = async (message: ChatMessage) => {
 };
 
 // Get all messages for a specific conversation
-export const getChatMessages = async (conversationId: string) => {
+export const getChatMessages = async (conversationId: string, userId: string) => {
   try {
+    // IMPORTANT: Always filter by userId first to satisfy security rules
     const q = query(
       collection(db, 'messages'),
+      where('userId', '==', userId),
       where('conversationId', '==', conversationId),
       orderBy('timestamp')
     );
@@ -56,6 +60,7 @@ export const getChatMessages = async (conversationId: string) => {
 // Get chat history organized by conversation
 export const getChatHistory = async (userId: string) => {
   try {
+    // Always include userId in the query to satisfy security rules
     const q = query(
       collection(db, 'messages'),
       where('userId', '==', userId),
@@ -86,10 +91,10 @@ export const getChatHistory = async (userId: string) => {
 };
 
 // Delete a conversation and all its messages
-export const deleteConversation = async (conversationId: string) => {
+export const deleteConversation = async (conversationId: string, userId: string) => {
   try {
-    // Get all messages for the conversation
-    const messages = await getChatMessages(conversationId);
+    // Get all messages for the conversation that belong to this user
+    const messages = await getChatMessages(conversationId, userId);
     
     // Delete each message
     const deletePromises = messages.map(message => 

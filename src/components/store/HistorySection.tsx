@@ -8,7 +8,6 @@ import { formatDistanceToNow } from 'date-fns';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 
-
 interface HistorySectionProps {
   selectedConversationId: string | null;
   onSelectConversation: (conversationId: string) => void;
@@ -64,31 +63,34 @@ const HistorySection = ({ selectedConversationId, onSelectConversation }: Histor
     }
   }, [selectedConversationId, user]);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleDeleteConversation = async (conversationId: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent the conversation from being selected when deleting
+
+const handleDeleteConversation = async (conversationId: string, e: React.MouseEvent) => {
+  e.stopPropagation(); // Prevent the conversation from being selected when deleting
+  
+  if (!user) return; // Make sure user is defined
+  
+  try {
+    // Pass the userId parameter here
+    await deleteConversation(conversationId, user.uid);
     
-    try {
-      await deleteConversation(conversationId);
-      
-      // Update state to remove the deleted conversation
-      setConversations(prev => {
-        const updated = {...prev};
-        delete updated[conversationId];
-        return updated;
-      });
-      
-      // Deselect if the deleted conversation was selected
-      if (selectedConversationId === conversationId) {
-        onSelectConversation('');
-      }
-    } catch (error) {
-      console.error("Failed to delete conversation:", error);
-      setError("Failed to delete conversation. Please try again.");
-      // Clear error after 3 seconds
-      setTimeout(() => setError(null), 3000);
+    // Update state to remove the deleted conversation
+    setConversations(prev => {
+      const updated = {...prev};
+      delete updated[conversationId];
+      return updated;
+    });
+    
+    // Deselect if the deleted conversation was selected
+    if (selectedConversationId === conversationId) {
+      onSelectConversation('');
     }
-  };
+  } catch (error) {
+    console.error("Failed to delete conversation:", error);
+    setError("Failed to delete conversation. Please try again.");
+    // Clear error after 3 seconds
+    setTimeout(() => setError(null), 3000);
+  }
+};
 
   const filteredConversations = Object.entries(conversations)
     // Filter by search term

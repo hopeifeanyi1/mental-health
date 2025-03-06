@@ -82,12 +82,15 @@ const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation
     }
   });
 
-  // Load existing messages when conversation changes
+  // Update the loadConversation function in ChatInterface.tsx
+
+// Load existing messages when conversation changes
   useEffect(() => {
     const loadConversation = async () => {
       if (user && selectedConversationId) {
         try {
-          const chatMessages = await getChatMessages(selectedConversationId);
+          // Pass the userId parameter here
+          const chatMessages = await getChatMessages(selectedConversationId, user.uid);
           // Format messages for the chat UI
           const formattedMessages = chatMessages.map(msg => ({
             id: msg.id || String(msg.timestamp.toMillis()),
