@@ -289,11 +289,11 @@ const HistorySection = ({ selectedConversationId, onSelectConversation }: Histor
                         <div className='bg-black w-1 h-1 rounded-full'></div>
                       </div>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem onClick={(e) => handleEditClick(conversationId, e)}>
-                        <Edit2 className='mr-1 inline w-4 h-4'/> Rename
+                    <DropdownMenuContent className='mr-10'>
+                      <DropdownMenuItem onClick={(e) => handleEditClick(conversationId, e)} className='text-md'>
+                        <Edit2 className='mr-1 inline w-4 h-4 '/> Rename
                       </DropdownMenuItem>
-                      <DropdownMenuItem className='text-red-600' onClick={(e) => handleDeleteConversation(conversationId, e)}>
+                      <DropdownMenuItem className='text-red-600 text-md' onClick={(e) => handleDeleteConversation(conversationId, e)} >
                         <Trash2 className='mr-1'/> Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>
