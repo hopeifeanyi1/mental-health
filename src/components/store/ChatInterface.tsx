@@ -187,7 +187,7 @@ const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation
         <Link href='./' className="my-auto "><Logo/></Link>
       </div>
       <div className="bg-zinc-200 pt-1 pb-6 relative lg:rounded-2xl lg:h-[85dvh] h-[94dvh] ">
-        <div className="flex justify-between items-center px-6 md:mb-3 mb-0.5">
+        <div className="flex justify-between items-center px-6 md:mb-3 mb-0.52">
           <div className="block lg:hidden">
           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger>
