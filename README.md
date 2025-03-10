@@ -1,4 +1,4 @@
-The Mental Health Chatbot, Easy Therapy, is a web-based application built with Next.js, Framer Motion, and AI-powered conversational capabilities. It provides a supportive, non-judgmental space for users seeking mental health guidance. The chatbot does not offer medical advice but encourages professional consultation for serious issues.
+The Mental Health Chatbot, Easy Therapy, is a web-based application built with Next.js, Framer Motion, and AI-powered conversational capabilities. It provides a supportive, non-judgmental space for users seeking mental health guidance. The chatbot does not offer medical advice but encourages professional consultation for serious issues. It is also a Progressive Web App (PWA), allowing users to install it on their devices for a seamless experience.
 
 ## Features
 - AI-powered chatbot for mental health support
@@ -9,6 +9,7 @@ The Mental Health Chatbot, Easy Therapy, is a web-based application built with N
 - Responsive layout for mobile and desktop
 - Uses AI SDK's GROQ LLaMA 3 model for generating empathetic responses
 - Implements streaming responses for a smooth chat experience
+- **PWA Support** for installation and offline capabilities
 
 ## Technologies Used
 - Next.js: Server-side rendering and API handling
@@ -18,6 +19,7 @@ The Mental Health Chatbot, Easy Therapy, is a web-based application built with N
 - AI SDK & GROQ: Natural language processing
 - Tailwind CSS: Modern and responsive UI styling
 - Firebase: Backend services for authentication and chat history management
+- **PWA (Progressive Web App)**: Allows users to install the app on their devices
 
 ## Installation & Setup
 ### Clone the repository:
@@ -41,11 +43,11 @@ Open http://localhost:3000 in your browser.
 ## Key Components
 ### Home Page (page.tsx)
 - Displays landing page with animations using Framer Motion
-- Uses `<Landing/>` component for introductory content
+- Uses <Landing/> component for introductory content
 
 ### Chat Interface (ChatInterface.tsx)
 - Handles user input and chatbot responses
-- Uses `useChat` hook for API communication
+- Uses useChat hook for API communication
 - Implements typing indicators and smooth scrolling
 - Stores user chat history in Firebase
 - Allows renaming and deleting chat history using Firebase
