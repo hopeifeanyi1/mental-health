@@ -1,6 +1,5 @@
 "use client";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import React, { useEffect } from "react";
+import React from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthContextProvider } from "./context/AuthContext";
 import "./globals.css";
@@ -29,6 +28,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Easy Therapy" />
         <meta name="theme-color" content="#4f46e5" />
+       
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable}`}

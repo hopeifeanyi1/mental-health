@@ -1,4 +1,4 @@
-'use client'; // Add this at the top to mark as a client component
+'use client';
 
 import React from 'react';
 

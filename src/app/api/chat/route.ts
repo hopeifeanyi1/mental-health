@@ -59,11 +59,9 @@ const keywordMap: Record<string, string[]> = {
 
 export const maxDuration = 30;
 
-// Function to analyze user message and retrieve relevant information
 function retrieveRelevantKnowledge(message: string): string {
   message = message.toLowerCase();
   
-  // Check for crisis keywords first - highest priority
   if (keywordMap.crisis.some(keyword => message.includes(keyword))) {
     return `IMPORTANT RESOURCES: ${mentalHealthKnowledgeBase.crisis.resources.join(" ")}`;
   }
@@ -71,20 +69,17 @@ function retrieveRelevantKnowledge(message: string): string {
   // eslint-disable-next-line prefer-const
   let relevantInfo: string[] = [];
   
-  // Check for other mental health topics
   for (const [topic, keywords] of Object.entries(keywordMap)) {
-    if (topic === 'crisis') continue; // Already checked
+    if (topic === 'crisis') continue;
     
     if (keywords.some(keyword => message.includes(keyword))) {
       const knowledge = mentalHealthKnowledgeBase[topic];
       
-      // Add a technique (if available)
       if (knowledge.techniques && knowledge.techniques.length > 0) {
         const randomTechnique = knowledge.techniques[Math.floor(Math.random() * knowledge.techniques.length)];
         relevantInfo.push(`RELEVANT TECHNIQUE: ${randomTechnique}`);
       }
       
-      // Add resources
       if (knowledge.resources && knowledge.resources.length > 0) {
         relevantInfo.push(`HELPFUL RESOURCES: ${knowledge.resources[0]}`);
       }
@@ -103,25 +98,17 @@ export async function POST(req: Request) {
         error: "Invalid request format: messages must be an array"
       }), { 
         status: 400,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type',
-        }
+        headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    // Get the most recent user message
-    const lastUserMessage = messages.filter(m => m.role === 'user').pop();
+    const lastUserMessage = messages.filter((m: { role: string }) => m.role === 'user').pop();
     
-    // Retrieve relevant knowledge if there is a user message
     let contextualKnowledge = "";
     if (lastUserMessage && typeof lastUserMessage.content === 'string') {
       contextualKnowledge = retrieveRelevantKnowledge(lastUserMessage.content);
     }
     
-    // Add retrieved information to system prompt if available
     let systemPrompt = `
       You are a companion, a chat buddy.
       You are a therapist.
@@ -143,33 +130,9 @@ export async function POST(req: Request) {
       messages,
     });
 
-    // Convert the AI response to a readable stream
-    const aiStream = result.toDataStream();
-    
-    const slowStream = new ReadableStream({
-      async start(controller) {
-        const reader = aiStream.getReader();
-
-        async function readChunk() {
-          const { done, value } = await reader.read();
-          if (done) {
-            controller.close();
-            return;
-          }
-
-          controller.enqueue(value);
-          await new Promise(resolve => setTimeout(resolve, 50)); // 50ms delay per chunk
-          readChunk();
-        }
-
-        readChunk();
-      }
-    });
-
-    return new Response(slowStream, {
+    // v6: use toDataStreamResponse() instead of toDataStream()
+    return result.toTextStreamResponse({
       headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-        'Transfer-Encoding': 'chunked',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
@@ -184,12 +147,7 @@ export async function POST(req: Request) {
       details: error.message || 'Unknown error'
     }), {
       status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
-      }
+      headers: { 'Content-Type': 'application/json' }
     });
   }
 }

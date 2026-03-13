@@ -1,7 +1,8 @@
 'use client';
 import React, { useState, useRef, useEffect } from "react";
 import { SendIcon, Bars } from "./Icon";
-import { useChat } from 'ai/react';
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
 import Link from "next/link";
 import Logo from "./Logo";
 import { LoaderCircle } from "lucide-react";
@@ -19,6 +20,17 @@ interface ChatInterfaceProps {
   onSelectConversation: (id: string) => void;
 }
 
+// Helper to extract plain text from ai v6 UIMessage parts
+const getMessageText = (message: { parts?: { type: string; text?: string }[] }): string => {
+  if (message.parts) {
+    return message.parts
+      .filter((p) => p.type === 'text')
+      .map((p) => p.text ?? '')
+      .join('');
+  }
+  return '';
+};
+
 const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation }: ChatInterfaceProps) => {
   const { user } = UserAuth();
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -29,33 +41,31 @@ const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation
   const [conversationId, setConversationId] = useState<string>('');
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  // Initialize conversation ID when component mounts or when selected conversation changes
+  // v6: input is managed manually
+  const [input, setInput] = useState('');
+
   useEffect(() => {
     if (selectedConversationId) {
       setConversationId(selectedConversationId);
     } else {
-      // Create a new conversation ID when no conversation is selected
       setConversationId(uuidv4());
     }
   }, [selectedConversationId]);
 
   const { 
-    messages, 
-    input, 
-    handleInputChange, 
-    handleSubmit, 
-    isLoading, 
+    messages,
+    sendMessage,
+    status,
     error,
-    setMessages 
+    setMessages
   } = useChat({
-    api: '/api/chat',
+    transport: new DefaultChatTransport({ api: '/api/chat' }),
     id: conversationId,
-    onFinish: async (message) => {
+    onFinish: async ({ message }) => {
       if (user && conversationId) {
         try {
-          // Only save messages if there's input (prevents empty messages)
+          const messageText = getMessageText(message);
           if (input.trim()) {
-            // Save user message
             await saveChatMessage({
               userId: user.uid,
               role: 'user',
@@ -63,18 +73,16 @@ const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation
               timestamp: Timestamp.now(),
               conversationId: conversationId
             });
-
-            // Save AI response
             await saveChatMessage({
               userId: user.uid,
               role: 'assistant',
-              content: message.content,
+              content: messageText,
               timestamp: Timestamp.now(),
               conversationId: conversationId
             });
           }
-        } catch (error) {
-          console.error("Failed to save chat message:", error);
+        } catch (err) {
+          console.error("Failed to save chat message:", err);
         }
       }
     },
@@ -83,64 +91,50 @@ const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation
     }
   });
 
-// Load existing messages when conversation changes
+  const isLoading = status === 'streaming' || status === 'submitted';
+
   useEffect(() => {
     const loadConversation = async () => {
       if (user && selectedConversationId) {
         try {
-          // Pass the userId parameter here
           const chatMessages = await getChatMessages(selectedConversationId, user.uid);
-          // Format messages for the chat UI
           const formattedMessages = chatMessages.map(msg => ({
             id: msg.id || String(msg.timestamp.toMillis()),
             role: msg.role as 'user' | 'assistant',
-            content: msg.content
+            content: msg.content,
+            parts: [{ type: 'text' as const, text: msg.content }],
           }));
           setMessages(formattedMessages);
-        } catch (error) {
-          console.error("Failed to load conversation:", error);
+        } catch (err) {
+          console.error("Failed to load conversation:", err);
         }
       } else {
-        // Clear messages for new chat
         setMessages([]);
       }
     };
-
     loadConversation();
   }, [user, selectedConversationId, setMessages]);
 
   useEffect(() => {
     if (isLoading) {
       setMinTimeElapsed(false);
-      timeoutRef.current = setTimeout(() => {
-        setMinTimeElapsed(true);
-      }, 3000);
+      timeoutRef.current = setTimeout(() => setMinTimeElapsed(true), 3000);
     } else {
       setMinTimeElapsed(true);
     }
-
     return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, [isLoading]);
 
-  // Close the sheet when a conversation is selected
   useEffect(() => {
-    if (selectedConversationId && isSheetOpen) {
-      setIsSheetOpen(false);
-    }
+    if (selectedConversationId && isSheetOpen) setIsSheetOpen(false);
   }, [selectedConversationId, isSheetOpen]);
 
   const showTyping = isLoading || !minTimeElapsed;
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, showTyping]);
 
   useEffect(() => {
@@ -151,7 +145,7 @@ const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation
   }, [input]);
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    handleInputChange(e);
+    setInput(e.target.value);
     const textarea = e.target;
     textarea.style.height = "auto";
     const newHeight = Math.min(textarea.scrollHeight, 180);
@@ -162,22 +156,21 @@ const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation
 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!input.trim()) return;
-    handleSubmit(e);
-    if (textAreaRef.current) {
-      textAreaRef.current.style.height = '52px';
-    }
+    if (!input.trim() || isLoading) return;
+    sendMessage({ text: input });
+    setInput('');
+    if (textAreaRef.current) textAreaRef.current.style.height = '52px';
   };
 
   const handleNewChatClick = () => {
     setConversationId(uuidv4());
     setMessages([]);
+    setInput('');
     onNewChat();
   };
 
   const handleSelectConversation = (id: string) => {
     onSelectConversation(id);
-    // This will trigger the useEffect that closes the sheet
     setIsSheetOpen(false);
   };
 
@@ -189,22 +182,22 @@ const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation
       <div className="bg-zinc-200 pt-1 pb-6 relative lg:rounded-2xl lg:h-[85dvh] h-[94dvh] ">
         <div className="flex justify-between items-center px-6 md:mb-3 mb-0.52">
           <div className="block lg:hidden">
-          <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-            <SheetTrigger>
-              <Bars className="w-7 h-7"/> 
-            </SheetTrigger>
-            <SheetContent className="w-[400px] sm:w-[540px]">
-              <SheetHeader>
-                <SheetDescription className="w-full h-full">
-                  <HistorySection 
-                    selectedConversationId={selectedConversationId} 
-                    onSelectConversation={handleSelectConversation} 
-                  />
-                </SheetDescription>
-              </SheetHeader>
-              <SheetClose className="hidden" />
-            </SheetContent>
-          </Sheet>
+            <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+              <SheetTrigger>
+                <Bars className="w-7 h-7"/> 
+              </SheetTrigger>
+              <SheetContent className="w-[400px] sm:w-[540px]">
+                <SheetHeader>
+                  <SheetDescription className="w-full h-full">
+                    <HistorySection 
+                      selectedConversationId={selectedConversationId} 
+                      onSelectConversation={handleSelectConversation} 
+                    />
+                  </SheetDescription>
+                </SheetHeader>
+                <SheetClose className="hidden" />
+              </SheetContent>
+            </Sheet>
           </div>
           <button 
             onClick={handleNewChatClick}
@@ -236,7 +229,7 @@ const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation
                     {m.role === 'user' ? 'You' : 'Mental Health Assistant'}
                   </div>
                   <div className="text-md whitespace-pre-wrap">
-                    {m.content}
+                    {getMessageText(m)}
                   </div>
                 </div>
               </div>
@@ -244,7 +237,7 @@ const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation
           )}
           
           {showTyping && (
-            <div className="text-sm flex pl-4 ">
+            <div className="text-sm flex pl-4">
               <div className="bg-black/70 rounded-full w-[10px] h-[10px] mr-[8px] animate-pulse delay-0"/>
               <div className="bg-black/70 rounded-full w-[10px] h-[10px] mr-[8px] animate-pulse delay-200"/>
               <div className="bg-black/70 rounded-full w-[10px] h-[10px] animate-pulse delay-400"/>
@@ -272,7 +265,6 @@ const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation
             rows={1}
             disabled={isLoading}
           />
-
           <button 
             type="submit" 
             className={`bg-black rounded-full w-10 h-10 flex items-center justify-center shrink-0 ${isExpanded ? "" : "my-auto"} ${
