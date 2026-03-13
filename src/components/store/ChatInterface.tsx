@@ -80,24 +80,12 @@ const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation
               conversationId: conversationId
             });
           }
-        } catch (err) {
-          console.error("Failed to save chat message:", err);
+        } catch {
         }
       }
     },
-    onError: (err) => {
-      console.error('[useChat] Error:', err);
-    }
+
   });
-
-  // Log every status and messages change
-  useEffect(() => {
-    console.log('[useChat] status changed:', status);
-  }, [status]);
-
-  useEffect(() => {
-    console.log('[useChat] messages updated:', JSON.stringify(messages, null, 2));
-  }, [messages]);
 
   const isLoading = status === 'streaming' || status === 'submitted';
 
@@ -113,8 +101,7 @@ const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation
             parts: [{ type: 'text' as const, text: msg.content }],
           }));
           setMessages(formattedMessages);
-        } catch (err) {
-          console.error("Failed to load conversation:", err);
+        } catch {
         }
       } else {
         setMessages([]);
@@ -165,7 +152,6 @@ const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
-    console.log('[useChat] Sending message:', input);
     sendMessage({ text: input });
     setInput('');
     if (textAreaRef.current) textAreaRef.current.style.height = '52px';

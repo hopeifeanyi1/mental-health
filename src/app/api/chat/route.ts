@@ -149,7 +149,6 @@ export async function POST(req: Request) {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
-    console.error('[API] Error:', error);
     return new Response(JSON.stringify({
       error: "Internal server error",
       details: error.message || 'Unknown error'

@@ -26,8 +26,7 @@ const Page = () => {
     try {
       await logOut();
       router.push("/");
-    } catch (error) {
-      console.log(error);
+    } catch {
     }
   };
 
