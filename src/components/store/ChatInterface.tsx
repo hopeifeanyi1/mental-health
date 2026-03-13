@@ -20,7 +20,6 @@ interface ChatInterfaceProps {
   onSelectConversation: (id: string) => void;
 }
 
-// Helper to extract plain text from ai v6 UIMessage parts
 const getMessageText = (message: { parts?: { type: string; text?: string }[] }): string => {
   if (message.parts) {
     return message.parts
@@ -40,8 +39,6 @@ const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [conversationId, setConversationId] = useState<string>('');
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-
-  // v6: input is managed manually
   const [input, setInput] = useState('');
 
   useEffect(() => {
@@ -62,9 +59,11 @@ const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation
     transport: new DefaultChatTransport({ api: '/api/chat' }),
     id: conversationId,
     onFinish: async ({ message }) => {
+      console.log('[useChat] onFinish fired, message:', JSON.stringify(message, null, 2));
       if (user && conversationId) {
         try {
           const messageText = getMessageText(message);
+          console.log('[useChat] Extracted text:', messageText);
           if (input.trim()) {
             await saveChatMessage({
               userId: user.uid,
@@ -87,9 +86,18 @@ const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation
       }
     },
     onError: (err) => {
-      console.error('Chat Error:', err);
+      console.error('[useChat] Error:', err);
     }
   });
+
+  // Log every status and messages change
+  useEffect(() => {
+    console.log('[useChat] status changed:', status);
+  }, [status]);
+
+  useEffect(() => {
+    console.log('[useChat] messages updated:', JSON.stringify(messages, null, 2));
+  }, [messages]);
 
   const isLoading = status === 'streaming' || status === 'submitted';
 
@@ -157,6 +165,7 @@ const ChatInterface = ({ selectedConversationId, onNewChat, onSelectConversation
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
+    console.log('[useChat] Sending message:', input);
     sendMessage({ text: input });
     setInput('');
     if (textAreaRef.current) textAreaRef.current.style.height = '52px';

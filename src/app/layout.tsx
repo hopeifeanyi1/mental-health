@@ -36,7 +36,7 @@ export default function RootLayout({
         <AuthContextProvider>
           {children}
         </AuthContextProvider>
-        <Script src="/worker-registration.js" 
+        <Script src="/worker-registration.ts" 
           strategy="afterInteractive" 
           id="service-worker-registration" 
         />

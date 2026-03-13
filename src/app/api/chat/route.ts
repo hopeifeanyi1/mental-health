@@ -1,13 +1,11 @@
 import { groq } from '@ai-sdk/groq';
-import { streamText } from 'ai';
+import { streamText, createUIMessageStreamResponse } from 'ai';
 
-// Define interface for knowledge base items
 interface KnowledgeItem {
   techniques?: string[];
   resources: string[];
 }
 
-// Define knowledge base of therapeutic content and resources
 const mentalHealthKnowledgeBase: Record<string, KnowledgeItem> = {
   anxiety: {
     techniques: [
@@ -49,7 +47,6 @@ const mentalHealthKnowledgeBase: Record<string, KnowledgeItem> = {
   }
 };
 
-// Keywords to detect mental health topics
 const keywordMap: Record<string, string[]> = {
   anxiety: ["anxiety", "anxious", "worry", "panic", "nervous", "fear", "stressed"],
   depression: ["depression", "depressed", "sad", "hopeless", "unmotivated", "tired", "exhausted", "empty"],
@@ -61,32 +58,37 @@ export const maxDuration = 30;
 
 function retrieveRelevantKnowledge(message: string): string {
   message = message.toLowerCase();
-  
   if (keywordMap.crisis.some(keyword => message.includes(keyword))) {
     return `IMPORTANT RESOURCES: ${mentalHealthKnowledgeBase.crisis.resources.join(" ")}`;
   }
-  
   // eslint-disable-next-line prefer-const
   let relevantInfo: string[] = [];
-  
   for (const [topic, keywords] of Object.entries(keywordMap)) {
     if (topic === 'crisis') continue;
-    
     if (keywords.some(keyword => message.includes(keyword))) {
       const knowledge = mentalHealthKnowledgeBase[topic];
-      
       if (knowledge.techniques && knowledge.techniques.length > 0) {
         const randomTechnique = knowledge.techniques[Math.floor(Math.random() * knowledge.techniques.length)];
         relevantInfo.push(`RELEVANT TECHNIQUE: ${randomTechnique}`);
       }
-      
       if (knowledge.resources && knowledge.resources.length > 0) {
         relevantInfo.push(`HELPFUL RESOURCES: ${knowledge.resources[0]}`);
       }
     }
   }
-  
   return relevantInfo.join("\n\n");
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function extractText(m: any): string {
+  if (typeof m.content === 'string') return m.content;
+  if (Array.isArray(m.parts)) {
+    return m.parts
+      .filter((p: { type: string }) => p.type === 'text')
+      .map((p: { text?: string }) => p.text ?? '')
+      .join('');
+  }
+  return '';
 }
 
 export async function POST(req: Request) {
@@ -94,44 +96,50 @@ export async function POST(req: Request) {
     const { messages } = await req.json();
 
     if (!Array.isArray(messages)) {
-      return new Response(JSON.stringify({ 
+      return new Response(JSON.stringify({
         error: "Invalid request format: messages must be an array"
-      }), { 
+      }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    const lastUserMessage = messages.filter((m: { role: string }) => m.role === 'user').pop();
-    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const normalizedMessages = messages.map((m: any) => ({
+      role: m.role as 'user' | 'assistant',
+      content: extractText(m),
+    }));
+
+    const lastUserMessage = normalizedMessages.filter(m => m.role === 'user').pop();
     let contextualKnowledge = "";
-    if (lastUserMessage && typeof lastUserMessage.content === 'string') {
+    if (lastUserMessage) {
       contextualKnowledge = retrieveRelevantKnowledge(lastUserMessage.content);
     }
-    
+
     let systemPrompt = `
       You are a companion, a chat buddy.
       You are a therapist.
       Give reply like a real person.
       Vibe with me but also help me process things when I need to.
-      Never give medical advice. 
+      Never give medical advice.
       Encourage professional help for serious issues.
       Response should be extremely short, conversational paragraphs.
       Do not be repetitive.
     `;
-    
+
     if (contextualKnowledge) {
       systemPrompt += `\n\nHere is some relevant information that may help with your response (incorporate naturally without stating the techniques or resources by name):\n${contextualKnowledge}`;
     }
 
-    const result = await streamText({
-      model: groq('llama3-70b-8192'), 
+    const result = streamText({
+      model: groq('llama-3.3-70b-versatile'),
       system: systemPrompt,
-      messages,
+      messages: normalizedMessages,
     });
 
-    // v6: use toDataStreamResponse() instead of toDataStream()
-    return result.toTextStreamResponse({
+    // toUIMessageStream() is the correct v6 method on StreamTextResult
+    return createUIMessageStreamResponse({
+      stream: result.toUIMessageStream(),
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -141,7 +149,7 @@ export async function POST(req: Request) {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
-    console.error('API Error:', error);
+    console.error('[API] Error:', error);
     return new Response(JSON.stringify({
       error: "Internal server error",
       details: error.message || 'Unknown error'
